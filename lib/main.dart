@@ -44,9 +44,28 @@ class MyAppState extends ChangeNotifier {
   }
 }
 
-class sidebar extends StatelessWidget {
+class sidebar extends StatefulWidget {
+  @override
+  State<sidebar> createState() => _sidebarState();
+}
+
+class _sidebarState extends State<sidebar> {
+  var selectedIndex = 0;
+
   @override
   Widget build(BuildContext context) {
+    Widget page;
+    switch (selectedIndex) {
+      case 0:
+        page = MyHomePage();
+        break;
+
+      case 1:
+        page = Favourites();
+        break;
+      default:
+        throw UnimplementedError('no widget for $selectedIndex');
+    }
     return Scaffold(
       body: Row(
         children: [
@@ -63,16 +82,18 @@ class sidebar extends StatelessWidget {
                   label: Text('Favorites'),
                 ),
               ],
-              selectedIndex: 0,
+              selectedIndex: selectedIndex,
               onDestinationSelected: (value) {
-                print('selected: $value');
+                setState(() {
+                  selectedIndex = value;
+                });
               },
             ),
           ),
           Expanded(
             child: Container(
               color: Theme.of(context).colorScheme.primaryContainer,
-              child: MyHomePage(),
+              child: page,
             ),
           ),
         ],
@@ -148,6 +169,33 @@ class bigCard extends StatelessWidget {
           pair.asCamelCase,
           style: style,
         ),
+      ),
+    );
+  }
+}
+
+class Favourites extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+    if (appState.favourites.isEmpty) {
+      return Center(
+        child: Text("No favourites added"),
+      );
+    }
+    return Center(
+      child: ListView(
+        children: [
+          Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                  'You have added ${appState.favourites.length} favourites')),
+          for (var pair in appState.favourites)
+            ListTile(
+              leading: Icon(Icons.favorite),
+              title: Text(pair.asLowerCase),
+            )
+        ],
       ),
     );
   }
