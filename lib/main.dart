@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueGrey),
         ),
-        home: MyHomePage(),
+        home: sidebar(),
       ),
     );
   }
@@ -27,30 +27,100 @@ class MyApp extends StatelessWidget {
 
 class MyAppState extends ChangeNotifier {
   var current = WordPair.random();
+  var favourites = <WordPair>[];
   void getNext() {
     current = WordPair.random();
     print(current);
     notifyListeners();
   }
+
+  void toggleFavourites() {
+    if (favourites.contains(current)) {
+      favourites.remove(current);
+    } else {
+      favourites.add(current);
+    }
+    notifyListeners();
+  }
+}
+
+class sidebar extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Row(
+        children: [
+          SafeArea(
+            child: NavigationRail(
+              extended: false,
+              destinations: [
+                NavigationRailDestination(
+                  icon: Icon(Icons.home),
+                  label: Text('Home'),
+                ),
+                NavigationRailDestination(
+                  icon: Icon(Icons.favorite),
+                  label: Text('Favorites'),
+                ),
+              ],
+              selectedIndex: 0,
+              onDestinationSelected: (value) {
+                print('selected: $value');
+              },
+            ),
+          ),
+          Expanded(
+            child: Container(
+              color: Theme.of(context).colorScheme.primaryContainer,
+              child: MyHomePage(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class MyHomePage extends StatelessWidget {
+  var sidebar;
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     var pair = appState.current;
-    return Scaffold(
-      body: Column(
+    IconData icon;
+    if (appState.favourites.contains(pair)) {
+      icon = Icons.favorite;
+    } else {
+      icon = Icons.favorite_border;
+    }
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('A random Awesome  idea:'),
+          Text('A random word generator: '),
           bigCard(pair: pair),
           // adding a button
-          ElevatedButton(
-              onPressed: () {
-                appState.getNext();
-                // print('Button Pressed');
-              },
-              child: Text("Next"))
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton.icon(
+                onPressed: () {
+                  appState.toggleFavourites();
+                },
+                icon: Icon(icon),
+                label: Text('Like'),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 0),
+                child: ElevatedButton(
+                    onPressed: () {
+                      appState.getNext();
+                      // print('Button Pressed');
+                    },
+                    child: Text("Next")),
+              ),
+            ],
+          )
         ],
       ),
     );
@@ -68,7 +138,7 @@ class bigCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final style = theme.textTheme.displayMedium!
+    final style = theme.textTheme.displaySmall!
         .copyWith(color: theme.colorScheme.onPrimary);
     return Card(
       color: theme.colorScheme.primary,
